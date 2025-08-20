@@ -1,0 +1,63 @@
+# Docker Compose file for running vLLM with Qwen3 model
+# This configuration sets up a GPU-accelerated inference server
+
+services:
+  vllm-qwen3:
+    # Use the official vLLM OpenAI-compatible API image
+    image: vllm/vllm-openai:latest
+    
+    # Assign a fixed container name for easy reference
+    container_name: vllm-qwen3
+    
+    # Map host port 8000 to container port 8000 for API access
+    ports:
+      - "8000:8000"
+    
+    # Mount volumes for persistent storage and model caching
+    volumes:
+      # Persist HuggingFace model cache on host to avoid re-downloading models
+      - ./hf-cache:/root/.cache/huggingface  # <-- Persistent host volume
+    
+    # Set environment variables for optimal performance and compatibility
+    environment: 
+      # Optimize PyTorch CUDA memory allocation to prevent memory fragmentation
+      - PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True 
+      # Use FlashInfer backend for faster attention computation (requires flashinfer installation)
+      - VLLM_ATTENTION_BACKEND=FLASHINFER 
+    
+    # Configure GPU resource allocation for the container
+    deploy:
+      resources:
+        reservations:
+          devices:
+            # Request 1 NVIDIA GPU for this service
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    
+    # Override default container command with vLLM-specific arguments
+    command:
+      # Specify the model to load (Qwen3 4B instruct model with FP8 quantization)
+      - --model
+      - Qwen/Qwen3-4B-Instruct-2507-FP8
+      # Bind the server to all network interfaces
+      - --host
+      - 0.0.0.0
+      # Set the port for the API server
+      - --port
+      - "8000"
+      # Set maximum sequence length the model can handle (context window)
+      - --max-model-len
+      - "38912"
+      # Use FP8 data type for key-value cache to reduce memory usage
+      - --kv-cache-dtype
+      - "fp8"
+      # Use half precision (float16) for model computations
+      - --dtype
+      - "half"
+      # Set API key for authentication (should be changed in production)
+      - --api-key
+      - "abc"
+    
+    # Automatically restart the container if it stops, except when manually stopped
+    restart: unless-stopped
