@@ -48,7 +48,9 @@ services:
       - "8000"
       # Set maximum sequence length the model can handle (context window)
       - --max-model-len
-      - "38912"
+      - "56320"
+      - --max_num_seqs
+      - "1"
       # Use FP8 data type for key-value cache to reduce memory usage
       - --kv-cache-dtype
       - "fp8"

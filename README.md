@@ -11,8 +11,8 @@
 # Stats from testing on RTX 3080 with 10GB VRAM
 - Model weights take 4.22GiB
 - Non-torch memory takes 0.05GiB
-- PyTorch activation peak memory takes 1.72GiB
-- Rest of the memory reserved for KV Cache is 2.68GiB
+- PyTorch activation peak memory takes 0.48GiB
+- Rest of the memory reserved for KV Cache is 3.92GiB
 ```
 
 ## Test if GPU is configured with docker runtime
