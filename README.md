@@ -1,5 +1,8 @@
 # How to run Qwen3 using vLLM locally for coding tasks
 
+## Running Qwen3-4B with Open WebUI
+![GIF of a cat](assets/qwen3-4b-openwebui.gif)
+
 ## What we need
 - OS - Ubuntu 22/24 (_should work on Windows since we are using docker_)
 - Nvidia GPU (tested on RTX 3080-10GB)
