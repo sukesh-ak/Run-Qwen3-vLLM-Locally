@@ -1,0 +1,18 @@
+# Model ID from Hugging Face
+VLLM_MODEL=Qwen/Qwen3-4B-Instruct-2507-FP8
+
+# Server binding
+VLLM_HOST=0.0.0.0
+VLLM_PORT=8000
+
+# Model configuration
+VLLM_MAX_MODEL_LEN=56320
+VLLM_MAX_NUM_SEQS=1
+VLLM_KV_CACHE_DTYPE=fp8
+VLLM_DTYPE=half
+
+# API Authentication
+VLLM_API_KEY=abc
+
+# Optional: GPU memory utilization (uncomment in command if used)
+VLLM_GPU_MEMORY_UTILIZATION=0.9

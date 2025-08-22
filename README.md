@@ -23,24 +23,21 @@
 docker run --rm --gpus all nvidia/cuda:12.2.0-base-ubuntu22.04 nvidia-smi
 ```
 
-## Setup vLLM with docker and the model
+## Setup vLLM + Open WebUI with docker and the model
 
 ```bash
-# 1. Create a folder since we will keep model cache inside this folder on host machine
-$ mkdir vllm && cd vllm
+# 1. Git Clone this folder
+$ git https://github.com/sukesh-ak/Run-Qwen3-vLLM-Locally.git vllm
+$ cd vllm
 ```
 
 ```bash
-# 2. Make sure you have the docker-compose.yml file from this repo locally
+# 2. Run the container. Force recreate is for tweaking values and re-running if required
+$ docker compose --env-file env-qwen3-4b up -d --force-recreate
 ```
 
 ```bash
-# 3. Run the container. Force recreate is for tweaking values and re-running if required
-$ docker compose up -d --force-recreate
-```
-
-```bash
-# 4. Once the container is running, use the following command to monitor the logs
+# 3. Once the container is running, use the following command to monitor the logs
 # You can see if everything is working fine or not (OOM?)
 $ docker logs -f vllm-qwen3
 ```
@@ -48,7 +45,7 @@ $ docker logs -f vllm-qwen3
 ## Time to test with python
 
 ```bash
-# 5. Create and activate python env
+# 4. Create and activate python env
 $ python3 -m venv vllm-env
 $ source vllm-env/bin/activate
 
@@ -64,6 +61,28 @@ $ python pytest.py \
 	--prompt "write a websocket server in python"
 ```
 
+## Configure and use `Open WebUI`
+_Make sure both containers are up and running.  
+First run will take more time for downloading the model._
+```bash
+# 5. Configure and use Open WebUI
+Open WebUI chat interface at http://localhost:3000  
+You can use IP instead of localhost
+```
+
+1. Create an Admin account
+2. Once logged-in, goto `Admin Panel`
+3. Click `Settings > Connections`
+4. Click + under `OpenAi API`
+5. Add the following  
+URL: http://host.docker.internal:8000/v1   
+Key: abc  
+Prefix ID: vllm  
+Model IDs: Qwen/Qwen3-4B-Instruct-2507-FP8
+6. Click `save`
+
+No you can select the model and start chatting.
+
 ## Using with VS Code extension
 - For `roocode`, you can select `OpenAI compatible` and use the docker url, api and model name
 
@@ -72,7 +91,9 @@ $ python pytest.py \
 - GPU with larger VRAM? use larger model from here = >[Qwen3 models are here](https://huggingface.co/Qwen)
 
 ### Tweaking
-In case when you change the model and are getting OOM (Out of Memory) errors, you can reduce the values in the `docker-compose.yml` file 
+Now you can tweak the values if required for different models from the environment file `env-qwen3-4b` or create a new env file if you change the model.
+
+You can play with this value which is currently at `55K context size`.
 - Max model length => `max-model-len`
 
 

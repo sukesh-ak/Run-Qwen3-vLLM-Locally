@@ -1,65 +1,65 @@
-# Docker Compose file for running vLLM with Qwen3 model
-# This configuration sets up a GPU-accelerated inference server
-
 services:
   vllm-qwen3:
-    # Use the official vLLM OpenAI-compatible API image
     image: vllm/vllm-openai:latest
-    
-    # Assign a fixed container name for easy reference
     container_name: vllm-qwen3
-    
-    # Map host port 8000 to container port 8000 for API access
     ports:
       - "8000:8000"
-    
-    # Mount volumes for persistent storage and model caching
     volumes:
-      # Persist HuggingFace model cache on host to avoid re-downloading models
-      - ./hf-cache:/root/.cache/huggingface  # <-- Persistent host volume
-    
-    # Set environment variables for optimal performance and compatibility
-    environment: 
-      # Optimize PyTorch CUDA memory allocation to prevent memory fragmentation
-      - PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True 
-      # Use FlashInfer backend for faster attention computation (requires flashinfer installation)
-      - VLLM_ATTENTION_BACKEND=FLASHINFER 
-    
-    # Configure GPU resource allocation for the container
+      - ./hf-cache:/root/.cache/huggingface
+    environment:
+      - PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+      - VLLM_ATTENTION_BACKEND=FLASHINFER
+      # Pass additional environment variables from .env if needed
+      - VLLM_MODEL=${VLLM_MODEL}
+      - VLLM_HOST=${VLLM_HOST}
+      - VLLM_PORT=${VLLM_PORT}
+      - VLLM_MAX_MODEL_LEN=${VLLM_MAX_MODEL_LEN}
+      - VLLM_MAX_NUM_SEQS=${VLLM_MAX_NUM_SEQS}
+      - VLLM_KV_CACHE_DTYPE=${VLLM_KV_CACHE_DTYPE}
+      - VLLM_DTYPE=${VLLM_DTYPE}
+      - VLLM_API_KEY=${VLLM_API_KEY}
+      # Optional: GPU memory utilization
+      - VLLM_GPU_MEMORY_UTILIZATION=${VLLM_GPU_MEMORY_UTILIZATION:-0.9}
+
     deploy:
       resources:
         reservations:
           devices:
-            # Request 1 NVIDIA GPU for this service
             - driver: nvidia
               count: 1
               capabilities: [gpu]
-    
-    # Override default container command with vLLM-specific arguments
+
     command:
-      # Specify the model to load (Qwen3 4B instruct model with FP8 quantization)
       - --model
-      - Qwen/Qwen3-4B-Instruct-2507-FP8
-      # Bind the server to all network interfaces
+      - ${VLLM_MODEL}
       - --host
-      - 0.0.0.0
-      # Set the port for the API server
+      - ${VLLM_HOST}
       - --port
-      - "8000"
-      # Set maximum sequence length the model can handle (context window)
+      - ${VLLM_PORT}
       - --max-model-len
-      - "56320"
+      - ${VLLM_MAX_MODEL_LEN}
       - --max_num_seqs
-      - "1"
-      # Use FP8 data type for key-value cache to reduce memory usage
+      - ${VLLM_MAX_NUM_SEQS}
       - --kv-cache-dtype
-      - "fp8"
-      # Use half precision (float16) for model computations
+      - ${VLLM_KV_CACHE_DTYPE}
       - --dtype
-      - "half"
-      # Set API key for authentication (should be changed in production)
+      - ${VLLM_DTYPE}
       - --api-key
-      - "abc"
-    
-    # Automatically restart the container if it stops, except when manually stopped
+      - ${VLLM_API_KEY}
+      # Uncomment below if you want to use variable GPU memory utilization
+      # - --gpu-memory-utilization
+      # - ${VLLM_GPU_MEMORY_UTILIZATION}
+
     restart: unless-stopped
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    ports:
+      - "3000:8080"
+    volumes:
+      - ./webui-data:/app/backend/data
+    depends_on:
+      - vllm-qwen3
+    restart: unless-stopped
+    
