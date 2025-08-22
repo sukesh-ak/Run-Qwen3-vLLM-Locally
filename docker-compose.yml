@@ -61,5 +61,6 @@ services:
       - ./webui-data:/app/backend/data
     depends_on:
       - vllm-qwen3
+    extra_hosts:
+      - "host.docker.internal:host-gateway"      
     restart: unless-stopped
-    
